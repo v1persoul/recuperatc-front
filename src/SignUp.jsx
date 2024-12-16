@@ -1,19 +1,20 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, VStack, Heading, Input, Button } from "@chakra-ui/react";
 import { InputGroup } from "./components/ui/input-group";
-import { LuAlbum, LuKeyRound, LuMail, LuUser } from "react-icons/lu";
+import { LuKeyRound, LuMail } from "react-icons/lu";
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function SignUp() {
-    // Utilizamos useState para crear un estado formData que mantiene los valores de los campos del formulario.
     const [formData, setFormData] = useState({
-        nombre: '',
-        username: '',
         password: '',
         email: '',
     });
 
-    // Función que se llama cada vez que el usuario escribe en alguna parte del formulario.
+    const navigate = useNavigate();
+
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -21,32 +22,29 @@ export default function SignUp() {
         });
     };
 
-    // handleSubmit se ejecuta cuando se da clic al "Registrarse", y verifica que todos los campos estén completos 
-    // y cumplan con los criterios (debe de ser un correo electrónico válido).
-    const handleSubmit = async () => {
-        // Validación simple
-        if (!formData.nombre || !formData.username || !formData.password || !formData.email) {
-            alert("Por favor, complete todos los campos.");
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        console.log('Formulario enviado:', formData); // Añadir log para depuración
+        if (!formData.password || !formData.email) {
+            toast.error("Todos los campos son obligatorios");
             return;
         }
-
-        const emailRegex = /\S+@\S+\.\S+/;
-
-        if (!emailRegex.test(formData.email)) {
-            alert("Correo electrónico no válido.");
-            return;
-        }
-
 
         try {
-            const response = await axios.post('http://localhost:3001/signup', formData);
-            alert(response.data.message);
+            const response = await axios.post('http://localhost:8080/api/usuario/registro', {
+                password: formData.password,
+                email: formData.email
+            });
+            console.log('Usuario registrado:', response.data);
+            toast.success('Usuario registrado exitosamente', {
+                onClose: () => navigate('/') // Redirigir a la pantalla de login después de mostrar la notificación
+            });
         } catch (error) {
-            alert(error.response.data.message);
+            toast.error('Error registrando usuario');
+            console.error('Error registrando usuario:', error);
         }
     };
 
-    // Aqui comienza el renderizado del formulario, lo visual.
     return (
         <Box 
             w={['full', 'md']} 
@@ -57,60 +55,46 @@ export default function SignUp() {
             borderColor={['', 'gray.300']}
             borderRadius={10}
             backgroundColor={"white"}
+            shadow="md"
         >
             <VStack spacing={4} align='center' w='full'>
                 <img src="/src/assets/images/logofei.png" alt="Logo FEI" height="150px" width="150px" />
                 <VStack>
                     <Heading as="h1" fontSize="2xl" textAlign="center">Sistema de Organización de <br />
                     EE pendientes</Heading>
-                </VStack>
-
-                <InputGroup flex="1" startElement={<LuAlbum />}>
-                    <Input 
-                        name="nombre" 
-                        placeholder="Nombre Completo" 
-                        variant="outline" 
-                        size="lg" 
-                        onChange={handleChange}
-                    />
-                </InputGroup>
-
-                <InputGroup flex="1" startElement={<LuUser />}>
-                    <Input 
-                        name="username" 
-                        placeholder="Usuario" 
-                        variant="outline" 
-                        size="lg" 
-                        onChange={handleChange}
-                    />
-                </InputGroup>
-                
-                <InputGroup flex="1" startElement={<LuKeyRound />}>
-                    <Input 
-                        name="password" 
-                        placeholder="Contraseña" 
-                        type="password" 
-                        variant="outline" 
-                        size="lg" 
-                        onChange={handleChange}
-                    />
-                </InputGroup>
-
-                <InputGroup flex="1" startElement={<LuMail />}>
-                    <Input 
-                        name="email" 
-                        placeholder="Correo Electrónico" 
-                        type="email" 
-                        variant="outline" 
-                        size="lg" 
-                        onChange={handleChange}
-                    />
-                </InputGroup>
-
-                <Button colorPalette="blue" variant="solid" size="lg" onClick={handleSubmit}>
-                    Registrarse
-                </Button>
             </VStack>
+            </VStack>
+            <br />
+
+            <form onSubmit={handleSubmit}>
+                <VStack spacing={4}>
+                    <Heading>Registrarse</Heading>
+                    <InputGroup flex="1" startElement={<LuMail />}>
+                        <Input 
+                            name="email" 
+                            placeholder="Correo Electrónico" 
+                            type="email" 
+                            variant="outline" 
+                            size="lg" 
+                            onChange={handleChange}
+                        />
+                    </InputGroup>
+                    <InputGroup flex="1" startElement={<LuKeyRound />}>
+                        <Input 
+                            name="password" 
+                            placeholder="Contraseña" 
+                            type="password" 
+                            variant="outline" 
+                            size="lg" 
+                            onChange={handleChange}
+                        />
+                    </InputGroup>
+                    <Button colorPalette="blue" variant="solid" size="lg" type="submit" marginTop={5}>
+                        Registrar
+                    </Button>
+                </VStack>
+            </form>
+            <ToastContainer />
         </Box>
     );
 }

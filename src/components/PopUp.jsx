@@ -16,10 +16,9 @@ export default function PopUp({ materia, onClose }) {
             zIndex={1000} // Asegurarse de que el pop-up esté sobre otros elementos
             width={["80%", "400px"]}
         >
-            <Text fontSize="lg" fontWeight="bold">{materia.nombre}</Text>
+            <Text fontSize="lg" fontWeight="bold">{materia.nombre_materia}</Text>
             <Box mt={2}>
-                <Text><b>NRC:</b> {materia.nrc}</Text>
-                <Text><b>Docente:</b> {materia.docente}</Text>
+                <Text><b>Docente:</b> {materia.academico}</Text>
                 <Text><b>Horario:</b> {materia.horario}</Text>
             </Box>
             <Button mt={4} onClick={onClose} colorScheme="blue">

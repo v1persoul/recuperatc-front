@@ -1,31 +1,143 @@
-import { useState } from 'react';
-import { Box, Text, Separator, SimpleGrid } from "@chakra-ui/react";
+import { useState, useEffect } from 'react';
+import { Box, Text, Separator, SimpleGrid, Button, Flex } from "@chakra-ui/react";
+import { useNavigate } from 'react-router-dom';
 import { AvatarImg } from "./components/AvatarImg";
+import { supabase } from './supabaseClient';
 import MateriaCard from './components/MateriaCard';
+import { ChatPopUp } from './components/ChatPopUp';
 
 export default function Start() {
-    const [materias, setMaterias] = useState([
-        { id: 1, nombre: 'Matemáticas', descripcion: 'Descripción de Matemáticas', nrc: '12345', docente: 'Profesor A', horario: 'Lun 10-12', agregada: false },
-        { id: 2, nombre: 'Física', descripcion: 'Descripción de Física', nrc: '67890', docente: 'Profesor B', horario: 'Mar 14-16', agregada: false },
-        { id: 3, nombre: 'Química', descripcion: 'Descripción de Química', nrc: '11223', docente: 'Profesor C', horario: 'Mie 8-10', agregada: false },
-        { id: 4, nombre: 'Biología', descripcion: 'Descripción de Biología', nrc: '44556', docente: 'Profesor D', horario: 'Jue 10-12', agregada: false },
-        { id: 5, nombre: 'Historia', descripcion: 'Descripción de Historia', nrc: '78901', docente: 'Profesor E', horario: 'Vie 12-14', agregada: false },
-        { id: 6, nombre: 'Geografía', descripcion: 'Descripción de Geografía', nrc: '23456', docente: 'Profesor F', horario: 'Lun 14-16', agregada: false },
-        { id: 7, nombre: 'Inglés', descripcion: 'Descripción de Inglés', nrc: '34567', docente: 'Profesor G', horario: 'Mar 16-18', agregada: false },
-        { id: 8, nombre: 'Arte', descripcion: 'Descripción de Arte', nrc: '45678', docente: 'Profesor H', horario: 'Mie 10-12', agregada: false },
-        // Agrega más materias según sea necesario
-    ]);
 
-    const handleAddMateria = (id) => {
-        setMaterias(materias.map(materia => 
-            materia.id === id ? { ...materia, agregada: true } : materia
-        ));
+    const navigate = useNavigate();
+
+    const [materias, setMaterias] = useState([]);
+    const [usuarioId, setUsuarioId] = useState('');
+    const [usuarioEmail, setUsuarioEmail] = useState('');
+
+
+    useEffect(() => {
+        const fetchMaterias = async () => {
+            const { data, error } = await supabase
+                .from('materias_disponibles')
+                .select('id, nombre_materia, academico, horario');
+
+            if (error) {
+                console.error('Error fetching materias:', error);
+            } else {
+                setMaterias(data);
+            }
+        };
+
+        const fetchUserProfile = async () => {
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+            if (user) {
+                setUsuarioId(user.id);
+                setUsuarioEmail(user.email);
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('materias_deseadas')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching user profile:', error);
+                } else {
+                    const materiasDeseadas = data.materias_deseadas || [];
+                    setMaterias(prevMaterias => 
+                        prevMaterias.map(materia => ({
+                            ...materia,
+                            agregada: materiasDeseadas.includes(materia.id)
+                        }))
+                    );
+                }
+            } else if (userError) {
+                console.error('Error fetching user:', userError);
+            }
+        };
+
+        fetchMaterias();
+        fetchUserProfile();
+    }, []);
+
+    const handleAddMateria = async (id) => {
+        if (!id) {
+            console.error('Invalid materia ID:', id);
+            return; // Salir si el ID es inválido
+        }
+    
+        // Verificar que el usuario ID sea válido
+        if (!usuarioId) {
+            console.error('Invalid user ID:', usuarioId);
+            return; // Salir si el ID de usuario es inválido
+        }
+    
+        const { data: currentData, error: fetchError } = await supabase
+            .from('profiles')
+            .select('materias_deseadas')
+            .eq('id', usuarioId)
+            .single();
+    
+        if (fetchError) {
+            console.error('Error fetching current materias:', fetchError);
+            return;
+        }
+    
+        const currentMaterias = currentData.materias_deseadas || [];
+        const updatedMaterias = [...currentMaterias, id]; // Agregar la nueva materia
+    
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({ materias_deseadas: updatedMaterias })
+            .eq('id', usuarioId);
+    
+        if (error) {
+            console.error('Error adding materia:', error);
+        } else {
+            setMaterias(materias.map(materia => 
+                materia.id === id ? { ...materia, agregada: true } : materia
+            ));
+        }
     };
-
-    const handleRemoveMateria = (id) => {
-        setMaterias(materias.map(materia => 
-            materia.id === id ? { ...materia, agregada: false } : materia
-        ));
+    
+    const handleRemoveMateria = async (id) => {
+        if (!id) {
+            console.error('Invalid materia ID:', id);
+            return; // Salir si el ID es inválido
+        }
+    
+        // Verificar que el usuario ID sea válido
+        if (!usuarioId) {
+            console.error('Invalid user ID:', usuarioId);
+            return; // Salir si el ID de usuario es inválido
+        }
+    
+        const { data: currentData, error: fetchError } = await supabase
+            .from('profiles')
+            .select('materias_deseadas')
+            .eq('id', usuarioId)
+            .single();
+    
+        if (fetchError) {
+            console.error('Error fetching current materias:', fetchError);
+            return;
+        }
+    
+        const currentMaterias = currentData.materias_deseadas || [];
+        const updatedMaterias = currentMaterias.filter(materiaId => materiaId !== id); // Eliminar la materia
+    
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({ materias_deseadas: updatedMaterias })
+            .eq('id', usuarioId);
+    
+        if (error) {
+            console.error('Error removing materia:', error);
+        } else {
+            setMaterias(materias.map(materia => 
+                materia.id === id ? { ...materia, agregada: false } : materia
+            ));
+        }
     };
 
     return (
@@ -49,11 +161,11 @@ export default function Start() {
                 backgroundColor={"white"}
                 opacity="0.9"
             >
-                <AvatarImg/>
+                <AvatarImg />
 
                 {/* Nombre y matrícula del estudiante */}
-                <Text textStyle="lg" fontWeight="semibold" textAlign="center" textShadow="md">Felipe Murguia Leal</Text>
-                <Text textStyle="md" fontWeight="semibold" textAlign="center" textShadow="md">v1persoul</Text>
+                <Text textStyle="lg" fontWeight="semibold" textAlign="center" textShadow="md">¡Hola, estudiante!</Text>
+                <Text textStyle="xs" fontWeight="semibold" textAlign="center" textShadow="md">{usuarioEmail}</Text>
             </Box>
 
             {/* Cuadro con las materias ingresadas */}
@@ -80,11 +192,8 @@ export default function Start() {
                 </Text>
                 <Separator size="lg"/>
                 <SimpleGrid columns={3} spacing={4}>
-                    {materias.filter(materia => materia.agregada).map((materia, index) => (
-                        <Box 
-                            key={materia.id} 
-                            h="110px" // Altura fija para cada tarjeta
-                        >
+                    {materias.filter(materia => materia.agregada).map((materia) => (
+                        <Box key={materia.id} h="110px">
                             <MateriaCard 
                                 materia={materia} 
                                 onAdd={() => handleAddMateria(materia.id)} 
@@ -119,11 +228,8 @@ export default function Start() {
                 </Text>
                 <Separator size="lg"/>
                 <SimpleGrid columns={4} spacing={4}>
-                    {materias.filter(materia => !materia.agregada).map((materia, index) => (
-                        <Box 
-                            key={materia.id} 
-                            h="110px" // Altura fija para cada tarjeta
-                        >
+                    {materias.filter(materia => !materia.agregada).map((materia) => (
+                        <Box key={materia.id} h="110px">
                             <MateriaCard 
                                 materia={materia} 
                                 onAdd={() => handleAddMateria(materia.id)} 
@@ -133,6 +239,12 @@ export default function Start() {
                     ))}
                 </SimpleGrid>
             </Box>
+            
+            <Flex alignItems="center" justifyContent="center" height="160vh">
+                <Button colorPalette="blue" variant="solid" size="2xl" position="absolute" borderRadius={50} shadow="md" onClick={() => navigate('/mapa')} >
+                    Mostrar Mapa Curricular
+                </Button>
+            </Flex>
         </div>
     );
 }

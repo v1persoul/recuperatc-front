@@ -1,20 +1,21 @@
 import { useState } from 'react';
-import { Box, VStack, Heading, Input, Text, Button } from "@chakra-ui/react";
-import { InputGroup } from "./components/ui/input-group";
-import { LuKeyRound, LuUser } from "react-icons/lu";
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Box, VStack, Heading, Input, Button } from "@chakra-ui/react";
+import { InputGroup } from "./components/ui/input-group";
+import { LuKeyRound, LuMail } from "react-icons/lu";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from './AuthContext';
 
 export default function Login() {
-    // Utilizamos useState para crear un estado formData que mantiene los valores de los campos del formulario.
     const [formData, setFormData] = useState({
-        username: '',
-        password: ''
+        password: '',
+        email: '',
     });
 
-    const navigate = useNavigate(); // Hook para la navegación
+    const navigate = useNavigate();
+    const { login } = useAuth();
 
-    // Función que se llama cada vez que el usuario escribe en alguna parte del formulario.
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -22,26 +23,25 @@ export default function Login() {
         });
     };
 
-    // handleSubmit se ejecuta cuando se da clic al "Registrarse", y verifica que todos los campos estén completos.
-    const handleSubmit = async () => {
-        if (!formData.username || !formData.password) {
-            alert("Por favor, complete todos los campos.");
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        console.log('Formulario enviado:', formData); // Añadir log para depuración
+        if (!formData.password || !formData.email) {
+            toast.error("Todos los campos son obligatorios");
             return;
         }
 
         try {
-            const response = await axios.post('http://localhost:3001/login', formData);
-            alert(response.data.message);
+            await login(formData.email, formData.password);
+            toast.success('Inicio de sesión exitoso', {
+                onClose: () => navigate('/inicio') // Redirigir a la pantalla de inicio después de mostrar la notificación
+            });
         } catch (error) {
-            alert(error.response.data.message);
+            toast.error('Error iniciando sesión');
+            console.error('Error iniciando sesión:', error);
         }
     };
 
-    const navigateToSignUp = () => {
-        navigate("/signup");
-    };
-
-    // Aqui comienza el renderizado del formulario, lo visual.
     return (
         <Box 
             w={['full', 'md']} 
@@ -52,43 +52,53 @@ export default function Login() {
             borderColor={['', 'gray.300']}
             borderRadius={10}
             backgroundColor={"white"}
+            shadow="md"
         >
+
             <VStack spacing={4} align='center' w='full'>
                 <img src="/src/assets/images/logofei.png" alt="Logo FEI" height="150px" width="150px" />
                 <VStack>
                     <Heading as="h1" fontSize="2xl" textAlign="center">Sistema de Organización de <br />
                     EE pendientes</Heading>
-                </VStack>
-
-                <InputGroup flex="1" startElement={<LuUser />}>
-                    <Input 
-                        name="username" 
-                        placeholder="Usuario" 
-                        variant="outline" 
-                        size="lg" 
-                        onChange={handleChange}
-                    />
-                </InputGroup>
-                
-                <InputGroup flex="1" startElement={<LuKeyRound />}>
-                    <Input 
-                        name="password" 
-                        placeholder="Contraseña" 
-                        type="password" 
-                        variant="outline" 
-                        size="lg" 
-                        onChange={handleChange}
-                    />
-                </InputGroup>
-
-                <Button colorPalette="blue" variant="solid" size="lg" onClick={handleSubmit}>
-                    Iniciar Sesión
-                </Button>
-                <Text>¿No tienes cuenta?</Text>
-                <Button colorPalette="blue" variant="solid" size="lg" onClick={navigateToSignUp}>
-                    Registrarse
-                </Button>
             </VStack>
+            </VStack>
+            <br />
+
+            <form onSubmit={handleSubmit}>
+                <VStack spacing={4}>
+                    <Heading>Iniciar Sesión</Heading>
+                    <InputGroup flex="1" startElement={<LuMail />}>
+                        <Input 
+                            name="email" 
+                            placeholder="Correo Electrónico" 
+                            type="email" 
+                            variant="outline" 
+                            size="lg" 
+                            onChange={handleChange}
+                        />
+                    </InputGroup>
+                    <InputGroup flex="1" startElement={<LuKeyRound />}>
+                        <Input 
+                            name="password" 
+                            placeholder="Contraseña" 
+                            type="password" 
+                            variant="outline" 
+                            size="lg" 
+                            onChange={handleChange}
+                        />
+                    </InputGroup>
+                    <Button colorPalette="blue" variant="solid" size="lg" type="submit" marginTop={5}>
+                        Iniciar Sesión
+                    </Button>
+
+                    No tienes cuenta? 
+                    <Button colorPalette="blue" variant="solid" onClick={() => navigate('/signup')}>
+                        Regístrate
+                    </Button>
+
+                </VStack>
+            </form>
+            <ToastContainer />
         </Box>
     );
 }
