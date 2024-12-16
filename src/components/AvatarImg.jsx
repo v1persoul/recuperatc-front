@@ -1,20 +1,20 @@
 import { Image, Box } from "@chakra-ui/react";
-import { useNavigate } from 'react-router-dom';
+//import { useNavigate } from 'react-router-dom';
 
 // Imagen de Avatar
 export const AvatarImg = () => {
-    const navigate = useNavigate();
+    /*const navigate = useNavigate();
 
     const handleAvatarClick = () => {
         navigate('/perfil');
-    };
+    };*/
 
     return (
         <Box 
             display="flex" 
             justifyContent="center" 
             alignItems="center" 
-            onClick={handleAvatarClick} 
+            //onClick={handleAvatarClick} 
             cursor="pointer"
         >
             <Image 

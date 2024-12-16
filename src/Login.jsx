@@ -5,7 +5,7 @@ import { InputGroup } from "./components/ui/input-group";
 import { LuKeyRound, LuMail } from "react-icons/lu";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAuth } from './AuthContext';
+import { supabase } from './supabaseClient'; // Asegúrate de importar tu cliente de Supabase
 
 export default function Login() {
     const [formData, setFormData] = useState({
@@ -14,7 +14,6 @@ export default function Login() {
     });
 
     const navigate = useNavigate();
-    const { login } = useAuth();
 
     const handleChange = (e) => {
         setFormData({
@@ -30,14 +29,26 @@ export default function Login() {
             toast.error("Todos los campos son obligatorios");
             return;
         }
-
+    
         try {
-            await login(formData.email, formData.password);
+            // Iniciar sesión con Supabase
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: formData.email,
+                password: formData.password,
+            });
+    
+            if (error) {
+                throw error; // Lanza el error para manejarlo en el catch
+            }
+    
+            // Almacena el token de acceso en el almacenamiento local
+            const token = data.session.access_token; // Asegúrate de que estás utilizando el token correcto
+            localStorage.setItem('token', token); // Almacena el token
             toast.success('Inicio de sesión exitoso', {
                 onClose: () => navigate('/inicio') // Redirigir a la pantalla de inicio después de mostrar la notificación
             });
         } catch (error) {
-            toast.error('Error iniciando sesión');
+            toast.error('Error iniciando sesión: ' + error.message);
             console.error('Error iniciando sesión:', error);
         }
     };
@@ -54,13 +65,12 @@ export default function Login() {
             backgroundColor={"white"}
             shadow="md"
         >
-
             <VStack spacing={4} align='center' w='full'>
                 <img src="/src/assets/images/logofei.png" alt="Logo FEI" height="150px" width="150px" />
                 <VStack>
                     <Heading as="h1" fontSize="2xl" textAlign="center">Sistema de Organización de <br />
                     EE pendientes</Heading>
-            </VStack>
+                </VStack>
             </VStack>
             <br />
 
@@ -95,7 +105,6 @@ export default function Login() {
                     <Button colorPalette="blue" variant="solid" onClick={() => navigate('/signup')}>
                         Regístrate
                     </Button>
-
                 </VStack>
             </form>
             <ToastContainer />

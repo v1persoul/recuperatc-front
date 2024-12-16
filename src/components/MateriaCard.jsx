@@ -11,14 +11,14 @@ export default function MateriaCard({ materia, onAdd, onRemove }) {
 
     return (
         <Box
-            m={3}
+            m={1.5}
             border="1px"
             borderColor="gray.300"
             borderRadius={50}
             backgroundColor={"white"}
             shadow="md"
-            position="relative" // Hacer que el contenedor principal sea relativo
-            p={2}
+            position="relative"
+            p={1}
         >
             <Text className="materia-nombre" fontSize="xl" fontWeight="semibold" textAlign="center">{materia.nombre_materia}</Text>
 
@@ -27,11 +27,11 @@ export default function MateriaCard({ materia, onAdd, onRemove }) {
                     Más Información
                 </Button>
                 {materia.agregada ? (
-                    <Button ml={2} size="mg" colorPalette="blackAlpha" onClick={onRemove} fontSize="3xl" top={-5}>
+                    <Button ml={2} size="mg" colorPalette="blackAlpha" onClick={onRemove} fontSize="3xl" top={-5} variant="plain">
                         -
                     </Button>
                 ) : (
-                    <Button ml={2} size="mg" colorPalette="blackAlpha" onClick={onAdd} fontSize="3xl" top={-5}>  
+                    <Button ml={2} size="mg" colorPalette="blackAlpha" onClick={onAdd} fontSize="3xl" top={-5} variant="plain">  
                         +
                     </Button>
                 )}

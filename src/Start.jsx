@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Box, Text, Separator, SimpleGrid, Button, Flex } from "@chakra-ui/react";
+import { Box, Text, SimpleGrid, useDisclosure, Separator, Button, Flex } from "@chakra-ui/react";
 import { useNavigate } from 'react-router-dom';
 import { AvatarImg } from "./components/AvatarImg";
 import { supabase } from './supabaseClient';
 import MateriaCard from './components/MateriaCard';
-import { ChatPopUp } from './components/ChatPopUp';
+import PopUp from './components/PopUp';
 
 export default function Start() {
-
     const navigate = useNavigate();
-
     const [materias, setMaterias] = useState([]);
+    const [deseadas, setDeseadas] = useState([]);
     const [usuarioId, setUsuarioId] = useState('');
-    const [usuarioEmail, setUsuarioEmail] = useState('');
-
+    const [email, setEmail] = useState('');
+    const [selectedMateria, setSelectedMateria] = useState(null);
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
     useEffect(() => {
         const fetchMaterias = async () => {
@@ -30,10 +30,13 @@ export default function Start() {
 
         const fetchUserProfile = async () => {
             const { data: { user }, error: userError } = await supabase.auth.getUser();
-
+            if (userError) {
+                console.error('Error fetching user:', userError);
+                return;
+            }
             if (user) {
                 setUsuarioId(user.id);
-                setUsuarioEmail(user.email);
+                setEmail(user.email);
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('materias_deseadas')
@@ -44,6 +47,9 @@ export default function Start() {
                     console.error('Error fetching user profile:', error);
                 } else {
                     const materiasDeseadas = data.materias_deseadas || [];
+                    setDeseadas(materiasDeseadas);
+
+                    // Actualiza el estado de las materias para reflejar las deseadas
                     setMaterias(prevMaterias => 
                         prevMaterias.map(materia => ({
                             ...materia,
@@ -51,93 +57,86 @@ export default function Start() {
                         }))
                     );
                 }
-            } else if (userError) {
-                console.error('Error fetching user:', userError);
             }
         };
 
         fetchMaterias();
         fetchUserProfile();
-    }, []);
+    }, [usuarioId]);
 
     const handleAddMateria = async (id) => {
-        if (!id) {
-            console.error('Invalid materia ID:', id);
-            return; // Salir si el ID es inválido
+        if (!id || !usuarioId) {
+            console.error('Invalid materia ID or user ID:', id, usuarioId);
+            return;
         }
-    
-        // Verificar que el usuario ID sea válido
-        if (!usuarioId) {
-            console.error('Invalid user ID:', usuarioId);
-            return; // Salir si el ID de usuario es inválido
-        }
-    
+
         const { data: currentData, error: fetchError } = await supabase
             .from('profiles')
             .select('materias_deseadas')
             .eq('id', usuarioId)
             .single();
-    
+
         if (fetchError) {
             console.error('Error fetching current materias:', fetchError);
             return;
         }
-    
+
         const currentMaterias = currentData.materias_deseadas || [];
-        const updatedMaterias = [...currentMaterias, id]; // Agregar la nueva materia
-    
+        const updatedMaterias = [...currentMaterias, id];
+
         const { data, error } = await supabase
             .from('profiles')
             .update({ materias_deseadas: updatedMaterias })
             .eq('id', usuarioId);
-    
+
         if (error) {
             console.error('Error adding materia:', error);
         } else {
+            setDeseadas(updatedMaterias);
             setMaterias(materias.map(materia => 
                 materia.id === id ? { ...materia, agregada: true } : materia
             ));
         }
     };
-    
+
     const handleRemoveMateria = async (id) => {
-        if (!id) {
-            console.error('Invalid materia ID:', id);
-            return; // Salir si el ID es inválido
+        if (!id || !usuarioId) {
+            console.error('Invalid materia ID or user ID:', id, usuarioId);
+            return;
         }
-    
-        // Verificar que el usuario ID sea válido
-        if (!usuarioId) {
-            console.error('Invalid user ID:', usuarioId);
-            return; // Salir si el ID de usuario es inválido
-        }
-    
+
         const { data: currentData, error: fetchError } = await supabase
             .from('profiles')
             .select('materias_deseadas')
             .eq('id', usuarioId)
             .single();
-    
+
         if (fetchError) {
             console.error('Error fetching current materias:', fetchError);
             return;
         }
-    
+
         const currentMaterias = currentData.materias_deseadas || [];
-        const updatedMaterias = currentMaterias.filter(materiaId => materiaId !== id); // Eliminar la materia
-    
+        const updatedMaterias = currentMaterias.filter(materiaId => materiaId !== id);
+
         const { data, error } = await supabase
             .from('profiles')
             .update({ materias_deseadas: updatedMaterias })
             .eq('id', usuarioId);
-    
+
         if (error) {
             console.error('Error removing materia:', error);
         } else {
+            setDeseadas(updatedMaterias);
             setMaterias(materias.map(materia => 
                 materia.id === id ? { ...materia, agregada: false } : materia
             ));
         }
+    };
+
+    const handleMoreInfo = (materia) => {
+        setSelectedMateria(materia);
+        onOpen();
     };
 
     return (
@@ -165,7 +164,7 @@ export default function Start() {
 
                 {/* Nombre y matrícula del estudiante */}
                 <Text textStyle="lg" fontWeight="semibold" textAlign="center" textShadow="md">¡Hola, estudiante!</Text>
-                <Text textStyle="xs" fontWeight="semibold" textAlign="center" textShadow="md">{usuarioEmail}</Text>
+                <Text textStyle="xs" fontWeight="semibold" textAlign="center" textShadow="md">{email}</Text>
             </Box>
 
             {/* Cuadro con las materias ingresadas */}
@@ -239,9 +238,13 @@ export default function Start() {
                     ))}
                 </SimpleGrid>
             </Box>
-            
+
+            {selectedMateria && (
+                <PopUp isOpen={isOpen} onClose={onClose} materia={selectedMateria} />
+            )}
+
             <Flex alignItems="center" justifyContent="center" height="160vh">
-                <Button colorPalette="blue" variant="solid" size="2xl" position="absolute" borderRadius={50} shadow="md" onClick={() => navigate('/mapa')} >
+                <Button colorPalette="blue" variant="solid" size="2xl" position="absolute" borderRadius={50} shadow="md" onClick={() => navigate('/mapa')}>
                     Mostrar Mapa Curricular
                 </Button>
             </Flex>

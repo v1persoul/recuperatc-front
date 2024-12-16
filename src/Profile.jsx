@@ -22,12 +22,13 @@ export default function Profile() {
                 const response = await axios.get('http://localhost:8080/api/usuario/actualizar', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}` // Asegúrate de que el token esté almacenado
-                    }
+                    },
+                    withCredentials: true
                 });
                 setFormData({
                     username: response.data.username,
                     email: response.data.email,
-                    password: '', // No mostramos la contraseña por razones de seguridad
+                    password: '' // No incluir la contraseña en la respuesta
                 });
             } catch (error) {
                 console.error('Error fetching user data:', error);
@@ -38,43 +39,24 @@ export default function Profile() {
     }, []);
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+        setFormData(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
     };
 
     const handleSubmit = async () => {
-        // Crear un objeto para almacenar los datos a enviar
-        const dataToSend = {};
-
-        // Solo agregar los campos que tienen valores
-        if (formData.username) dataToSend.username = formData.username;
-        if (formData.password) dataToSend.password = formData.password;
-        if (formData.email) dataToSend.email = formData.email;
-
-        // Si no hay datos para enviar, no hacer nada
-        if (Object.keys(dataToSend).length === 0) {
-            alert("No se han realizado cambios.");
-            return;
-        }
-
-        const emailRegex = /\S+@\S+\.\S+/;
-
-        if (formData.email && !emailRegex.test(formData.email)) {
-            alert("Correo electrónico no válido.");
-            return;
-        }
-
         try {
-            const response = await axios.put('http://localhost:8080/api/usuario/actualizar', dataToSend, {
+            const response = await axios.put('http://localhost:8080/api/usuario/actualizar', formData, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}` // Incluir el token en el encabezado
-                }
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                withCredentials: true
             });
-            alert(response.data.message);
+            console.log('Usuario actualizado:', response.data);
         } catch (error) {
-            alert(error.response ? error.response.data.message : 'Error al actualizar el perfil');
+            console.error('Error actualizando usuario:', error);
         }
     };
 

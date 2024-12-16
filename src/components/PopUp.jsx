@@ -3,7 +3,7 @@ import { Box, Text, Button } from "@chakra-ui/react";
 export default function PopUp({ materia, onClose }) {
     return (
         <Box
-            position="fixed"
+            position="absolute"
             top="50%"
             left="50%"
             transform="translate(-50%, -50%)"
@@ -13,7 +13,7 @@ export default function PopUp({ materia, onClose }) {
             borderRadius={10}
             backgroundColor={"white"}
             shadow="md"
-            zIndex={1000} // Asegurarse de que el pop-up esté sobre otros elementos
+            zIndex={1500} // Asegurarse de que el pop-up esté sobre otros elementos
             width={["80%", "400px"]}
         >
             <Text fontSize="lg" fontWeight="bold">{materia.nombre_materia}</Text>
