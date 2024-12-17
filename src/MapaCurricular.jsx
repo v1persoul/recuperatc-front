@@ -11,7 +11,7 @@ export default function MapaCurricular(){
 
     return(
         <div>
-            <img src="./src/assets/images/mapacurricular-TECO.jpg" alt="Mapa Curricular Estandar Sugerido"/>
+            <img src="./dist/assets/mapacurricular-TECO.jpg" alt="Mapa Curricular Estandar Sugerido"/>
 
             <Button 
                 position="absolute"

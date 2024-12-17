@@ -66,7 +66,7 @@ export default function Login() {
             shadow="md"
         >
             <VStack spacing={4} align='center' w='full'>
-                <img src="/src/assets/images/logofei.png" alt="Logo FEI" height="150px" width="150px" />
+                <img src="./dist/assets/logofei.png" alt="Logo FEI" height="150px" width="150px" />
                 <VStack>
                     <Heading as="h1" fontSize="2xl" textAlign="center">Sistema de Organización de <br />
                     EE pendientes</Heading>

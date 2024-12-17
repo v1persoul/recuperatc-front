@@ -18,7 +18,7 @@ export const AvatarImg = () => {
             cursor="pointer"
         >
             <Image 
-                src="./src/assets/images/defaultAvatar.png" 
+                src="./dist/assets/defaultAvatar.png" 
                 boxSize="150px"
                 borderRadius="full"
                 fit="cover"
