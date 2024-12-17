@@ -21,7 +21,7 @@ export default function Profile() {
             try {
                 const response = await axios.get('http://localhost:8080/api/usuario/actualizar', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}` // Asegúrate de que el token esté almacenado
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
                     withCredentials: true
                 });

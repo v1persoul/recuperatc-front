@@ -13,7 +13,7 @@ export default function PopUp({ materia, onClose }) {
             borderRadius={10}
             backgroundColor={"white"}
             shadow="md"
-            zIndex={1500} // Asegurarse de que el pop-up esté sobre otros elementos
+            zIndex={1500}
             width={["80%", "400px"]}
         >
             <Text fontSize="lg" fontWeight="bold">{materia.nombre_materia}</Text>

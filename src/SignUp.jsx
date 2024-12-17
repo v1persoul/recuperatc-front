@@ -31,7 +31,7 @@ export default function SignUp() {
         }
 
         try {
-            const response = await axios.post('http://localhost:8080/api/usuario/registro', {
+            const response = await axios.post('http://recuperatc-back.railway.internal/api/usuario/registro', {
                 password: formData.password,
                 email: formData.email
             });

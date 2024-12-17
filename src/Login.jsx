@@ -5,7 +5,7 @@ import { InputGroup } from "./components/ui/input-group";
 import { LuKeyRound, LuMail } from "react-icons/lu";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { supabase } from './supabaseClient'; // Asegúrate de importar tu cliente de Supabase
+import { supabase } from './supabaseClient';
 
 export default function Login() {
     const [formData, setFormData] = useState({
@@ -42,7 +42,7 @@ export default function Login() {
             }
     
             // Almacena el token de acceso en el almacenamiento local
-            const token = data.session.access_token; // Asegúrate de que estás utilizando el token correcto
+            const token = data.session.access_token;
             localStorage.setItem('token', token); // Almacena el token
             toast.success('Inicio de sesión exitoso', {
                 onClose: () => navigate('/inicio') // Redirigir a la pantalla de inicio después de mostrar la notificación
